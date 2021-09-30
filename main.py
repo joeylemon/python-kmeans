@@ -260,7 +260,7 @@ if __name__ == "__main__":
         {"K": 32, "color": "green", "xticks": [1, 8, 16, 32]}
     ]
 
-    perform_comparison("baboon.jpeg", k_values)
-    perform_comparison("rocket.jpeg", k_values)
-    perform_comparison("smokey.jpeg", k_values)
-    perform_comparison("truck.jpeg", k_values)
+    perform_comparison("images/baboon.jpeg", k_values)
+    perform_comparison("images/rocket.jpeg", k_values)
+    perform_comparison("images/smokey.jpeg", k_values)
+    perform_comparison("images/truck.jpeg", k_values)
