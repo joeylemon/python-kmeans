@@ -47,7 +47,7 @@ def k_means(data, K, name=None):
             if len(cluster_points) == 0:
                 continue
 
-            # get mean r, g, and b values of all points in this class
+            # get mean r, g, and b values of all points in this cluster
             # e.g. mu = [112.5, 95.6, 204.2]
             mu = cluster_points.mean(axis=0)
 
@@ -109,25 +109,24 @@ def reduce_image(img, n_colors, name=None):
 
 
 def plot_clusters(name, iteration, data, centroids, labels):
-    # centroids[0] returns [r,g,b] for 0th centroid
-    # data[0] returns [r,g,b] for 0th pixel
-    # labels[0] returns index into centroids for 0th pixel
-
     K = len(centroids)
+
     plt.clf()
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
 
     for k in range(K):
-        # Get every 100th point in the cluster
-        cluster_points = data[labels == k][:100]
+        # Get first 200 points in cluster
+        cluster_points = data[labels == k][:200]
 
+        # Plot each cluster with its RGB color
         d_r = [c[0] for c in cluster_points]
         d_g = [c[1] for c in cluster_points]
         d_b = [c[2] for c in cluster_points]
         r, g, b = centroids[k] / 255
         ax.scatter(d_r, d_g, d_b, color=(r, g, b))
 
+    # Plot the centroids as large triangles
     for c in centroids:
         ax.scatter([c[0]], [c[1]], [c[2]], color=(
             c[0]/255, c[1]/255, c[2]/255), marker="^", s=[200], edgecolor="black")
