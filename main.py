@@ -1,3 +1,9 @@
+"""
+An implementation of the K-means clustering unsupervised machine learning algorithm
+which is used to reduce the number of colors required to represent an image.
+"""
+
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +18,7 @@ MAX_ITERATIONS = 24
 MIN_DELTA_MU = 1
 
 
-def k_means(data, K):
+def k_means(data, K, name=None):
     """
     Perform K-means clustering on the given data. Return the list of K centroids,
     list of labels for each data point, and a list of max delta means for each iteration.
@@ -22,11 +28,15 @@ def k_means(data, K):
     centroids = data[np.random.choice(len(data), size=K, replace=False)]
     deltas = []
     labels = None
+    i = 0
 
     for i in range(MAX_ITERATIONS):
         # assign each data point to closest centroid
         distances = euclidean_distances(data, centroids)
         labels = np.array([np.argmin(i) for i in distances])
+
+        if name and i == 0:
+            plot_clusters(name, i, data, centroids, labels)
 
         # keep track of the largest difference in centroid means
         max_delta_mu = 0
@@ -54,6 +64,9 @@ def k_means(data, K):
 
         deltas.append(max_delta_mu)
 
+        if name and i != 0 and i % 5 == 0:
+            plot_clusters(name, i, data, centroids, labels)
+
         # if the largest change in any centroid RGB color is less than 1, we can stop
         if max_delta_mu < MIN_DELTA_MU:
             print(
@@ -64,10 +77,13 @@ def k_means(data, K):
     distances = euclidean_distances(data, centroids)
     labels = np.array([np.argmin(i) for i in distances])
 
+    if name:
+        plot_clusters(name, i, data, centroids, labels)
+
     return centroids, labels, deltas
 
 
-def reduce_image(img, n_colors):
+def reduce_image(img, n_colors, name=None):
     """
     Apply K-means clustering to the given image (ndarray) with
     K=n_colors. Return the ndarray representing the reduced image.
@@ -80,7 +96,7 @@ def reduce_image(img, n_colors):
     pixels = np.float32(img.reshape((-1, d)))
 
     # perform k-means clustering on all pixels
-    centroids, labels, deltas = k_means(data=pixels, K=n_colors)
+    centroids, labels, deltas = k_means(data=pixels, K=n_colors, name=name)
 
     # update each pixel in the original image with its new classification
     pixels = np.array([centroids[i] for i in labels])
@@ -92,9 +108,41 @@ def reduce_image(img, n_colors):
     return pixels, deltas, labels
 
 
+def plot_clusters(name, iteration, data, centroids, labels):
+    # centroids[0] returns [r,g,b] for 0th centroid
+    # data[0] returns [r,g,b] for 0th pixel
+    # labels[0] returns index into centroids for 0th pixel
+
+    K = len(centroids)
+    plt.clf()
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+
+    for k in range(K):
+        # Get every 100th point in the cluster
+        cluster_points = data[labels == k][:100]
+
+        d_r = [c[0] for c in cluster_points]
+        d_g = [c[1] for c in cluster_points]
+        d_b = [c[2] for c in cluster_points]
+        r, g, b = centroids[k] / 255
+        ax.scatter(d_r, d_g, d_b, color=(r, g, b))
+
+    for c in centroids:
+        ax.scatter([c[0]], [c[1]], [c[2]], color=(
+            c[0]/255, c[1]/255, c[2]/255), marker="^", s=[200], edgecolor="black")
+
+    ax.set_title(f"Iteration {iteration}")
+    ax.set_xlabel("Red")
+    ax.set_ylabel("Green")
+    ax.set_zlabel("Blue")
+
+    plt.savefig(f"{name}/iterations/{K}_iter_{iteration}.jpeg")
+
+
 def plot_image_comparison(name, img_arr):
     """
-    Plot a 2x2 image comparison with the given array of images.
+    Plot a grid image comparison with the given array of images.
     img_arr is a list of dicts with keys "img", "title".
     """
 
@@ -166,16 +214,19 @@ def plot_cluster_distributions(name, dist_arr):
 def perform_comparison(filename, k_values):
     """
     Perform K-means clustering on the given image file with different K
-    values given in k_values. Plot comparisons including a 2x2 grid of
-    4 images, a centroid movement graph, and a cluster distribution histogram.
+    values given in k_values. Plot comparisons including a grid of images,
+    a centroid movement graph, and a cluster distribution histogram.
     """
-    basename = filename.split(".")[0]
+    basename = os.path.basename(filename).split(".")[0]
 
     K_nums = [str(val["K"]) for val in k_values]
     print(f"\nstart K-means on {basename} for K=[{', '.join(K_nums)}]")
 
     if not os.path.exists(basename):
         os.mkdir(basename)
+
+    if not os.path.exists(basename + "/iterations"):
+        os.mkdir(basename + "/iterations")
 
     img = io.imread(filename)
     comparisons = [{"img": img, "title": "Original Image"}]
@@ -185,7 +236,7 @@ def perform_comparison(filename, k_values):
     for vals in k_values:
         K, color, xticks = vals["K"], vals["color"], vals["xticks"]
 
-        img_K, mu_K, labels_K = reduce_image(img, n_colors=K)
+        img_K, mu_K, labels_K = reduce_image(img, n_colors=K, name=basename)
         io.imsave(f"{basename}/{K}.jpeg", np.uint8(img_K))
 
         comparisons.append(
