@@ -236,7 +236,7 @@ def perform_comparison(filename, k_values):
     for vals in k_values:
         K, color, xticks = vals["K"], vals["color"], vals["xticks"]
 
-        img_K, mu_K, labels_K = reduce_image(img, n_colors=K, name=basename)
+        img_K, mu_K, labels_K = reduce_image(img, n_colors=K)
         io.imsave(f"{basename}/{K}.jpeg", np.uint8(img_K))
 
         comparisons.append(
