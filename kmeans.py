@@ -5,6 +5,7 @@ which is used to reduce the number of colors required to represent an image.
 
 
 import os
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 from skimage import io
@@ -26,16 +27,16 @@ def k_means(data, K):
 
     # randomly choose k centroids from the data points
     centroids = data[np.random.choice(len(data), size=K, replace=False)]
+
+    # assign each data point to closest centroid
+    distances = euclidean_distances(data, centroids)
+    labels = np.array([np.argmin(i) for i in distances])
+
+    # track the largest centroid movements
     deltas = []
-    labels = None
-    i = 0
 
     for i in range(MAX_ITERATIONS):
-        # assign each data point to closest centroid
-        distances = euclidean_distances(data, centroids)
-        labels = np.array([np.argmin(i) for i in distances])
-
-        # keep track of the largest difference in centroid means
+        # keep track of the largest centroid movement for this iteration
         max_delta_mu = 0
 
         for k in range(K):
@@ -48,28 +49,25 @@ def k_means(data, K):
             # e.g. mu = [112.5, 95.6, 204.2]
             mu = cluster_points.mean(axis=0)
 
-            # get the max difference in a r,g, or b value
+            # get the max difference in an r,g, or b value
             # abs(centroids[k] - mu) will return diff in RGB values
             # e.g. abs(centroids[k] - mu) = [15.2, 25.4, 4.7]
-            delta_mu = abs(centroids[k] - mu).max()
-
-            # keep track of largest difference in centroid means
-            max_delta_mu = max(max_delta_mu, delta_mu)
+            max_delta_mu = max(max_delta_mu, abs(centroids[k] - mu).max())
 
             # update the kth centroid to the new mean value
             centroids[k] = mu
 
         deltas.append(max_delta_mu)
 
-        # if the largest change in any centroid RGB color is less than 1, we can stop
+        # assign each data point to closest centroid
+        distances = euclidean_distances(data, centroids)
+        labels = np.array([np.argmin(i) for i in distances])
+
+        # stop the iterations early if the largest change in an r, g, or b value is < MIN_DELTA_MU
         if max_delta_mu < MIN_DELTA_MU:
             print(
                 f"reached delta_mu {max_delta_mu:.2f} < {MIN_DELTA_MU} in {i} iterations for K={K}")
             break
-
-    # reassign each point to nearest centroid one last time
-    distances = euclidean_distances(data, centroids)
-    labels = np.array([np.argmin(i) for i in distances])
 
     return centroids, labels, deltas
 
@@ -127,6 +125,9 @@ def plot_clusters(name, iteration, data, centroids, labels):
     ax.set_ylabel("Green")
     ax.set_zlabel("Blue")
 
+    if not os.path.exists(name + "/iterations"):
+        os.mkdir(name + "/iterations")
+
     plt.savefig(f"{name}/iterations/{K}_iter_{iteration}.jpeg")
 
 
@@ -141,14 +142,14 @@ def plot_image_comparison(name, img_arr):
 
     # divide the images into rows and columns
     num_imgs = len(img_arr)
-    rows = num_imgs // 2
-    columns = num_imgs - rows
+    columns = num_imgs // 2
+    rows = math.ceil(num_imgs / columns)
 
     for i, vals in enumerate(img_arr):
         fig.add_subplot(rows, columns, i+1)
         plt.imshow(vals["img"], vmin=0, vmax=255)
         plt.axis("off")
-        plt.title(vals["title"])
+        plt.title(vals["title"], fontsize=8)
 
     plt.savefig(f"{name}/comparison.jpeg")
 
@@ -214,9 +215,6 @@ def perform_comparison(filename, k_values):
 
     if not os.path.exists(basename):
         os.mkdir(basename)
-
-    if not os.path.exists(basename + "/iterations"):
-        os.mkdir(basename + "/iterations")
 
     img = io.imread(filename)
     comparisons = [{"img": img, "title": "Original Image"}]

@@ -7,7 +7,7 @@ import kmeans
 class TestReduceImage(unittest.TestCase):
     def test_reduce_image(self):
         """ Ensure that images are reduced to the given amount of colors. """
-        img = io.imread("images/baboon.jpeg")
+        img = io.imread("images/smokey.jpeg")
 
         for K in [1, 2, 3, 4]:
             reduced_img, _, _ = kmeans.reduce_image(img, n_colors=K)
