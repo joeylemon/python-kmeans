@@ -23,3 +23,31 @@ As a further step to understanding how our K-means algorithm reaches a conclusio
 <p align="center">
 <img src="https://user-images.githubusercontent.com/8845512/135518453-caeb6851-e6f4-4c35-8485-5cf1700f301c.jpg" />
 </p>
+
+## How to Run
+
+To run the program on other images and K values, edit the main function of `kmeans.py` with the appropriate values:
+
+```py
+if __name__ == "__main__":
+    k_values = [
+        {"K": 4, "color": "blue", "xticks": [1, 2, 3, 4]},
+        {"K": 16, "color": "red", "xticks": [1, 8, 16]},
+        {"K": 32, "color": "green", "xticks": [1, 8, 16, 32]}
+    ]
+
+    perform_comparison("images/baboon.jpeg", k_values)
+    perform_comparison("images/rocket.jpeg", k_values)
+    perform_comparison("images/smokey.jpeg", k_values)
+    perform_comparison("images/truck.jpeg", k_values)
+```
+
+Then, execute the script:
+```sh
+> python kmeans.py
+```
+
+The program is accompanied by a unit test to ensure the image reduction is working correctly. You can run the test with:
+```sh
+> python test.py
+```
