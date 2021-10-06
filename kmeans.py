@@ -18,7 +18,7 @@ MAX_ITERATIONS = 24
 MIN_DELTA_MU = 1
 
 
-def k_means(data, K, name=None):
+def k_means(data, K):
     """
     Perform K-means clustering on the given data. Return the list of K centroids,
     list of labels for each data point, and a list of max delta means for each iteration.
@@ -34,9 +34,6 @@ def k_means(data, K, name=None):
         # assign each data point to closest centroid
         distances = euclidean_distances(data, centroids)
         labels = np.array([np.argmin(i) for i in distances])
-
-        if name and i == 0:
-            plot_clusters(name, i, data, centroids, labels)
 
         # keep track of the largest difference in centroid means
         max_delta_mu = 0
@@ -64,9 +61,6 @@ def k_means(data, K, name=None):
 
         deltas.append(max_delta_mu)
 
-        if name and i != 0 and i % 5 == 0:
-            plot_clusters(name, i, data, centroids, labels)
-
         # if the largest change in any centroid RGB color is less than 1, we can stop
         if max_delta_mu < MIN_DELTA_MU:
             print(
@@ -77,13 +71,10 @@ def k_means(data, K, name=None):
     distances = euclidean_distances(data, centroids)
     labels = np.array([np.argmin(i) for i in distances])
 
-    if name:
-        plot_clusters(name, i, data, centroids, labels)
-
     return centroids, labels, deltas
 
 
-def reduce_image(img, n_colors, name=None):
+def reduce_image(img, n_colors):
     """
     Apply K-means clustering to the given image (ndarray) with
     K=n_colors. Return the ndarray representing the reduced image.
@@ -96,7 +87,7 @@ def reduce_image(img, n_colors, name=None):
     pixels = np.float32(img.reshape((-1, d)))
 
     # perform k-means clustering on all pixels
-    centroids, labels, deltas = k_means(data=pixels, K=n_colors, name=name)
+    centroids, labels, deltas = k_means(data=pixels, K=n_colors)
 
     # update each pixel in the original image with its new classification
     pixels = np.array([centroids[i] for i in labels])
